@@ -1,0 +1,12 @@
+// @import "bootstrap/scss/bootstrap";
+// // header
+
+.breadcrumb-nav{
+  margin-top: 10px;
+  margin-right: 20px;
+  .breadcrumb-item{
+    a{
+      color: $Campari;
+    };
+  }
+};
