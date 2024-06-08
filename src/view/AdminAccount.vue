@@ -1,227 +1,238 @@
-
 <template>
   <AdminBreadcrumb :items="breadcrumbItems" />
-
+  <!-- 標題 -->
   <div class="adminblock">
     <h1 class="adminblock-h1">{{ mainTitle }}</h1>
     <span class="adminblock-pipe"> | </span>
     <h1 class="adminblock-h1">{{ subTitle }}</h1>
   </div>
 
+  <!-- 按鈕 -->
   <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-    <AdminBtnAdd :click="openForm"/>
+    <admin-btn @click="openModal('add')">
+      <template #icon>
+        <img src="../imgs/icon/icon_expand-w-67.svg" alt="addIcon" height="20" width="20" />
+      </template>
+      <template #text>新增</template>
+    </admin-btn>
   </div>
-  <section>
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">項次</th>
-            <th scope="col">姓名</th>
-            <th scope="col">E-mail</th>
-            <th scope="col">手機</th>
-            <th scope="col">職位</th>
-            <th scope="col">停用/啟用</th>
-            <th scope="col">編輯</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row">1</th>
-            <td>主管</td>
-            <td>Tibame@gmail.com</td>
-            <td>09123456789</td>
-            <td>主管</td>
-            <td></td>
-            <td>
-              <a href="">
-                <img src="../assets/images/icon/menu-dots-vertical_3917094.svg" alt="" width="20px" height="20ox">
-              </a>
-            </td>
-          </tr>
 
-          <tr>
-            <th scope="row">2</th>
-            <td>員工</td>
-            <td>Tibame@gmail.com</td>
-            <td>09123456789</td>
-            <td>員工</td>
-            <td>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="flexSwitchCheckChecked" checked>
-              </div>
-            </td>
-            <td>
-              <a href="">
-                <img src="../assets/images/icon/menu-dots-vertical_3917094.svg" alt="" width="20px" height="20ox">
-              </a>
-            </td>
-          </tr>
-        </tbody>
-        <caption>每頁列表顯示<span class="main__list-number">6</span>筆</caption>
-      </table>
+  <!-- 彈跳視窗 -->
+  <AdminModal
+    :title="modalTitle"
+    :fields="formFields"
+    :formData.sync="formData"
+    :visible="isModalVisible"
+    @save="handleSave"
+    @close="closeModal"
+  />
+
+  <!-- 列表 -->
+  <section>
+    <table class="table">
+      <thead class="table-thead">
+        <tr>
+          <th scope="col">項次</th>
+          <th scope="col">姓名</th>
+          <th scope="col">E-mail</th>
+          <th scope="col">手機</th>
+          <th scope="col">職位</th>
+          <th scope="col">停用/啟用</th>
+          <th scope="col">編輯</th>
+        </tr>
+      </thead>
+      <tbody class="table-tbody">
+        <tr v-for="(admin, index) in admins" :key="admin.id">
+          <th scope="row">{{ index + 1 }}</th>
+          <td>{{ admin.name }}</td>
+          <td>{{ admin.email }}</td>
+          <td>{{ admin.phone }}</td>
+          <td>{{ admin.position }}</td>
+          <td>
+            <div class="form-check form-switch">
+              <input 
+                :id="'flexSwitchCheckChecked' + admin.id" 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="admin.active"
+                @change="toggleStatus(admin)"
+              />
+            </div>
+          </td>
+          <td>
+            <button @click="openModal('edit', admin)">
+              <img src="../imgs/icon/icon_admin-edit.svg" alt="editIcon" width="20px" height="20px" />
+            </button>
+          </td>
+        </tr>
+      </tbody>
+      <caption>
+        每頁列表顯示<span class="main__list-number">6</span>筆
+      </caption>
+    </table>
   </section>
 </template>
 
 <script>
-  import { variables } from '../assets/js/AdminVariables.js';
-  import AdminBreadcrumb from '../components/AdminBreadcrumb.vue';
-  import AdminBtnAdd from '../components/AdminBtnAdd.vue';
-  import Swal from 'sweetalert2';
+import AdminBreadcrumb from '../components/AdminBreadcrumb.vue'
+import AdminBtn from '../components/AdminBtn.vue'
+import AdminModal from '../components/AdminModal.vue'
+import { variables } from '../js/AdminVariables.js'
 
-  export default {
-    name: 'AdminAccount',
-    components: {
-      AdminBreadcrumb,
-      AdminBtnAdd
-    },
-    data() {
-      return {
-        mainTitle: variables.adminblock.admin,
-        subTitle: variables.adminblock.account,
-        breadcrumbItems: [
-        { text: '首頁', link: '/adminHome', active: false },
+export default {
+  name: 'AdminAccount',
+  components: {
+    AdminBreadcrumb,
+    AdminBtn,
+    AdminModal
+  },
+  data() {
+    return {
+      mainTitle: variables.adminblock.admin,
+      subTitle: variables.adminblock.account,
+      breadcrumbItems: [
+        { text: '首頁', link: '/admin', active: false },
         { text: variables.adminblock.admin, link: '', active: true },
-        { text: variables.adminblock.account, link: '/adminAccount', active: false }
-      ]
-      };
-    },
-    methods: {
-      async openForm() {
-        const { value: formValues } = await Swal.fire({
-          title: "管理者新增",
-          html: `
-          <form id="swal-form">
-            <div class="swal2-input-group">
-              <label for="swal-input1">姓名</label>
-              <input id="swal-input1" class="swal2-input" placeholder="請輸入姓名">
-            </div>
-            <div class="swal2-input-group">
-              <label for="swal-input2">E-mail</label>
-              <input id="swal-input2" class="swal2-input" placeholder="請輸入 E-mail">
-            </div>
-            <div class="swal2-input-group">
-              <label for="swal-input3">手機</label>
-              <input id="swal-input3" class="swal2-input" placeholder="請輸入手機號碼">
-            </div>
-            <div class="swal2-input-group">
-              <label for="swal-input4">設定密碼</label>
-              <input id="swal-input4" type="password" class="swal2-input" placeholder="如修改密碼請直接輸入,如沒有修改則無變更">
-            </div>
-            <div class="swal2-input-group">
-              <label for="swal-input5">確認密碼</label>
-              <input id="swal-input5" type="password" class="swal2-input" placeholder="如修改密碼請直接輸入,如沒有修改則無變更">
-            </div>
-            <div class="swal2-input-group">
-              <label for="swal-input6">職位</label>
-              <select id="swal-input6" class="swal2-input">
-                <option value="主管">主管</option>
-                <option value="員工">員工</option>
-              </select>
-            </div>
-            <div class="swal2-input-group">
-              <label for="swal-input7">啟用/停用</label>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="swal-input7" checked>
-              </div>
-            </div>
-          </form>
-          `,
-          focusConfirm: false,
-          showCancelButton: true,
-          confirmButtonText: '儲存',
-          cancelButtonText: '取消',
-          preConfirm: () => {
-            return {
-              name: document.getElementById("swal-input1").value,
-              email: document.getElementById("swal-input2").value,
-              phone: document.getElementById("swal-input3").value,
-              password: document.getElementById("swal-input4").value,
-              confirmPassword: document.getElementById("swal-input5").value,
-              position: document.getElementById("swal-input6").value,
-              active: document.getElementById("swal-input7").checked
-            };
-          }
-        });
+        { text: variables.adminblock.account, link: '/admin_account', active: false }
+      ],
 
-        if (formValues) {
-          Swal.fire({
-            icon: 'success',
-            title: '儲存成功',
-            confirmButtonText: '確定'
-          });
+      // 彈跳視窗model
+      actionType: 'add',
+      modalTitle: '管理者新增',
+      formFields: [
+        { id: 'name', label: '姓名', type: 'input' ,name:'name'},
+        { id: 'email', label: 'E-mail', type: 'input' },
+        { id: 'phone', label: '手機', type: 'input' },
+        { id: 'password', label: '設定密碼', type: 'password' },
+        { id: 'confirmPassword', label: '確認密碼', type: 'password' },
+        {
+          id: 'position',
+          label: '職位',
+          type: 'select',
+          options: [
+            { value: 'manager', text: '主管' },
+            { value: 'developer', text: '員工' }
+          ]
+        },
+        { id: 'active', label: '停用/啟用', type: 'checkbox' }
+      ],
+      formData: {
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+        position: 'manager',
+        active: true
+      },
+      // 要串資料庫的地方
+      admins: [
+        { id: 1, name: 'Tibame', email: 'Tibame@gmail.com', phone: '09123456789', position: '主管', active: true },
+      ],
+      isModalVisible: false,
+      existingData: null
+    };
+  },
+  methods: {
+    // 彈跳視窗：是新增按鈕還是table的編輯按鈕
+    openModal(action, data = null) {
+      this.actionType = action;
+      this.modalTitle = action === 'add' ? '管理者新增' : '管理者編輯';
+      this.formData = data ? { ...data } : {
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+        position: 'manager',
+        active: true
+      };
+      this.isModalVisible = true;
+    },
+    closeModal() {
+      this.isModalVisible = false;
+    },
+    handleSave(formData) {
+      if (this.actionType === 'add') {
+        // 新增邏輯
+        const newAdmin = { ...formData, id: this.admins.length + 1 };
+        this.admins.push(newAdmin);
+      } else {
+        // 編輯邏輯
+        const index = this.admins.findIndex(admin => admin.id === formData.id);
+        if (index !== -1) {
+          this.admins.splice(index, 1, { ...formData });
         }
       }
-    }
+      this.closeModal();
+    },
   }
+}
 </script>
 
-
-
 <style lang="scss" scoped>
-  .adminblock{
-    margin-top: 40px;
-    margin-left: 160px;
-    color: $campari;
-    &-h1{
-      display: inline;
-      font-size: 40px;
-    }
-    &-pipe {
-      font-size: 40px;
-      margin: 0 20px; 
-    }
-  }
-  .d-grid{
-    margin-right: 95px;
-    margin-top: 140px;
-  }
+@import '../../node_modules/bootstrap/scss/bootstrap.scss'; // 確保這一行在最上面
+
+.adminblock {
+  margin-top: 40px;
+  margin-left: 160px;
+  color: $campari;
   
-  .table{
-    width: 85%;
-    margin-top: 20px;
-    margin-left:160px;
-    thead{
+  &-h1 {
+    display: inline;
+    font-size: $fontSize_h3;
+  }
+
+  &-pipe {
+    font-size: $fontSize_h3;
+    margin: 0 20px;
+  }
+}
+.d-grid {
+  margin-right: 125px;
+  margin-top: 190px;
+
+  img {
+    margin-right: 5px;
+  }
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}
+.table {
+  width: 85%;
+  margin-top: 10px;
+  margin-left: 160px;
+
+  .table-thead {
+    font-size: $fontSize_h4;
+
+    th {
       background-color: $campari;
-      color: $ramosGinFizz;
+      color: $ramos-gin-fizz;
+      vertical-align: middle;
     }
-    #flexSwitchCheckChecked:checked {
-        background-color: $Enable;
-        border: solid $Enable;
-      }
-    .fa-solid.fa-pencil{
-      color: #222;
-    } 
   }
-  .swal-form{
-    // z-index: 3;
-    .swal2-input {
-      pointer-events: auto; /* 確保輸入框可以被點擊和輸入 */
-      opacity: 1; /* 確保輸入框是可見的 */
+  .table-tbody {
+    
+    td {
+      vertical-align: middle;
+    }
+    // table的toggle
+    .form-check-input:checked {
+      background-color: $toggle-on;
+      border-color: $toggle-on;
+    }
+    button {
+      border: none;
+      background: none;
+    }
   }
-
+  // 彈跳視窗的toggle
+  #flexSwitchCheckChecked:checked {
+    background-color: $toggle-on;
+    border: solid $toggle-on;
   }
-  // sweet2
-  // .swal2-popup.swal2-modal.swal2-show {
-  //   width: 600px !important; /* 確保 SweetAlert2 彈窗的寬度 */
-  // }
-
-  // .swal2-input-group {
-  //   display: flex;
-  //   align-items: center;
-  //   margin-bottom: 10px;
-  // }
-
-  // .swal2-input-group label {
-  //   width: 100px; /* 調整標籤的寬度 */
-  //   margin-right: 10px;
-  // }
-
-  // .swal2-input-group input,
-  // .swal2-input-group select {
-  //   flex: 1;
-  // }
-
-  // .swal2-input {
-  //   width: 100% !important; /* 確保輸入框寬度為 100% */
-  // }
+}
 </style>

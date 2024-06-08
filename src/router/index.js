@@ -24,7 +24,7 @@ const routes = [
       //   }
       // },
       {
-        path: 'adminAccount',
+        path: '/adminAccount',
         component: () => import('@/view/AdminAccount.vue'),
         meta: {
           title: '管理者專區',
