@@ -30,5 +30,3 @@ export const variables = {
     account: '帳號管理',
   }
 };
-
-ccc
