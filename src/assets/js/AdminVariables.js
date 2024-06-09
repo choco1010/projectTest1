@@ -32,3 +32,4 @@ export const variables = {
 };
 
 test1
+rest2
